@@ -1,0 +1,21 @@
+
+<h4><%= @cron.name %> Stats</h4>
+
+<table style="width:100%">
+  <tr>
+    <th>cron_name</th>
+    <th>start_time</th>
+    <th>end_time</th>
+    <th>ping_freq</th>
+  </tr>
+  <% @cron_hash.each do |k,v| %>
+    <% v.each do |cr| %>
+      <tr>
+        <td><%= k %></a></td>
+        <td><%= cr[:start_time] %></td>
+        <td><%= cr[:end_time] %></td>
+        <td><%= cr[:ping_freq] %></td>
+      </tr>
+    <% end %>
+  <% end %>
+</table>

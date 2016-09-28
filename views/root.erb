@@ -1,0 +1,19 @@
+
+<h4>Crons last run</h4>
+
+<table style="width:100%">
+  <tr>
+    <th>cron_name</th>
+    <th>start_time</th>
+    <th>end_time</th>
+    <th>ping_freq</th>
+  </tr>
+  <% @cron_hash.each do |k,v| %>
+    <tr>
+      <td><a href="/cron?name=<%= k %>"><%= k %></a></td>
+      <td><%= v[:start_time] %></td>
+      <td><%= v[:end_time] %></td>
+      <td><%= v[:ping_freq] %></td>
+    </tr>
+  <% end %>
+</table>

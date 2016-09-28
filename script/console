@@ -1,0 +1,14 @@
+#! /usr/bin/env ruby
+
+libs = []
+libs << "irb/completion"
+libs << './environment.rb'
+
+command_line = []
+command_line << "irb"
+command_line << libs.inject("") { |acc, lib| acc + %( -r "#{lib}") }
+command_line << "--simple-prompt"
+command = command_line.join(" ")
+
+puts "Welcome to the console interface."
+exec command
