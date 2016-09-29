@@ -15,7 +15,7 @@ configure :production, :development do
 end
 
 def _log msg
-  f = File.open("/tmp/sinatra.log", "a")
+  f = File.open("log/application.log", "a")
   f.puts msg
   f.close
 end
