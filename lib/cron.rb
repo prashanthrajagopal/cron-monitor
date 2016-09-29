@@ -9,4 +9,6 @@ class Cron
   property :updated_at, DateTime
 
   validates_presence_of :name
+  validates_presence_of :exec_time
+  validates_presence_of :ping_freq
 end

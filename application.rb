@@ -2,6 +2,7 @@ require "rubygems"
 require "bundler/setup"
 require "sinatra"
 require 'time_difference'
+require 'pony'
 require File.join(File.dirname(__FILE__), "environment")
 
 configure do
@@ -29,11 +30,14 @@ def populate_cron_runs(action,cron_name)
 end
 
 def alert cron_id, error_type, time, freq
+  msg = ""
   if error_type == 1
-    _log "Cron #{Cron.first(:id => cron_id).name} started at #{time.strftime("%d-%m-%Y - %H:%M:%S")} but did not complete in #{freq} minutes"
+    msg = "Cron #{Cron.first(:id => cron_id).name} started at #{time.strftime("%d-%m-%Y - %H:%M:%S")} but did not complete in #{freq} minutes"
   elsif error_type == 2
-    _log "Cron #{Cron.first(:id => cron_id).name} did not start. It was supposed to run every #{freq} minutes. Last started at #{time.strftime("%d-%m-%Y - %H:%M:%S")}"
+    msg = "Cron #{Cron.first(:id => cron_id).name} did not start. It was supposed to run every #{freq} minutes. Last started at #{time.strftime("%d-%m-%Y - %H:%M:%S")}"
   end
+  _log "sending mail with content ---------- #{msg}"
+  _log Pony.mail(:to => ENV["EMAIL_TO"], :from => ENV["EMAIL_FROM"], :subject => 'CRON ALERT', :body => msg)
 end
 
 Thread.new do
@@ -84,10 +88,10 @@ end
 post "/ping" do
   begin
     if Cron.first(:name => params[:name])
-      populate_cron_runs params[:action], params[:name]
+      populate_cron_runs params[:status], params[:name]
     else
       Cron.create(:name => params[:name], :exec_time => params[:et], :ping_freq => params[:pf])
-      populate_cron_runs params[:action], params[:name]
+      populate_cron_runs params[:status], params[:name]
     end
   rescue Exception => e
     puts e.message

@@ -18,9 +18,11 @@ group :development do
   gem "awesome_print", require:"ap"
   gem 'bullet'
   gem 'hirb'
+  gem 'dm-sqlite-adapter'
 end
 
 group :test do
   gem 'rspec', :require => 'spec'
   gem 'rack-test'
+  gem 'dm-sqlite-adapter'
 end
