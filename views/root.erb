@@ -10,7 +10,11 @@
   </tr>
   <% @cron_hash.each do |k,v| %>
     <tr>
-      <td><a href="/cron?name=<%= k %>"><%= k %></a></td>
+      <% if v[:cron_status] %>
+        <td bgcolor="#FF0000"><a href="/cron?name=<%= k %>"><%= k %></a></td>
+      <% else %>
+        <td bgcolor="#00FF00"><a href="/cron?name=<%= k %>"><%= k %></a></td>
+      <% end %>
       <td><%= v[:start_time] %></td>
       <td><%= v[:end_time] %></td>
       <td><%= v[:ping_freq] %></td>

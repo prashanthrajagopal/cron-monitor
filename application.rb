@@ -15,7 +15,7 @@ configure :production, :development do
 end
 
 def _log msg
-  f = File.open("log/application.log", "a")
+  f = File.open("logs/application.log", "a")
   f.puts msg
   f.close
 end
@@ -48,7 +48,7 @@ Thread.new do
         CronRun.all(:cron_id => cron.id).each do |cr|
           if ( cr.end_time == nil && cr.alert == 0 )
             cron_exec_time = Cron.first(:id => cr.cron_id).exec_time
-            if TimeDifference.between(cr.start_time,DateTime.now).in_minutes.to_i > cron_exec_time
+            if TimeDifference.between(cr.start_time, DateTime.now).in_minutes.to_i > cron_exec_time
               cr.update(:alert => 1)
               alert(cr.cron_id, 1, cr.start_time, cron_exec_time)
             end
@@ -70,7 +70,15 @@ get "/" do
   @cron_hash = {}
   Cron.each do |cron|
     cr = CronRun.last(:cron_id => cron.id)
-    @cron_hash[cron.name] = {:start_time => cr.start_time, :end_time => cr.end_time, :ping_freq => cron.ping_freq, :exec_freq => cron.exec_time}
+    cron_failure = false
+    if CronRun.last(:end_time => nil, :cron_id => cron.id)
+      if TimeDifference.between(CronRun.last(:end_time => nil, :cron_id => cron.id).start_time, DateTime.now).in_hours < 24
+        cron_failure = true
+      else
+        cron_failure = false
+      end
+    end
+    @cron_hash[cron.name] = { :start_time => cr.start_time, :end_time => cr.end_time, :ping_freq => cron.ping_freq, :exec_freq => cron.exec_time, :cron_status => cron_failure }
   end
   erb :root
 end
@@ -78,6 +86,14 @@ end
 get "/cron" do
   @cron = Cron.first(:name => params[:name])
   cron_run = CronRun.all(:cron_id => @cron.id, :order => [ :id.desc ], :limit => 20)
+  @cr_failed = nil
+  if CronRun.last(:end_time => nil, :cron_id => @cron.id)
+    if TimeDifference.between(CronRun.last(:end_time => nil, :cron_id => @cron.id).start_time, DateTime.now).in_hours < 24
+      @cr_failed = CronRun.last(:end_time => nil, :cron_id => @cron.id)
+    else
+      @cr_failed = nil
+    end
+  end
   @cron_hash = { @cron.name => [] }
   cron_run.each do |cr|
     @cron_hash[@cron.name] << {:start_time => cr.start_time, :end_time => cr.end_time, :ping_freq => @cron.ping_freq, :exec_freq => @cron.exec_time}

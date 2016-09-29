@@ -8,10 +8,18 @@
     <th>end_time</th>
     <th>ping_freq</th>
   </tr>
+  <% if @cr_failed %>
+    <tr>
+      <td bgcolor="#FF0000"><%= @cron.name %></td>
+      <td><%= @cr_failed.start_time %></td>
+      <td><%= @cr_failed.end_time %></td>
+      <td><%= @cron.ping_freq %></td>
+    </tr>
+  <% end %>
   <% @cron_hash.each do |k,v| %>
     <% v.each do |cr| %>
       <tr>
-        <td><%= k %></a></td>
+        <td bgcolor="#00FF00"><%= k %></a></td>
         <td><%= cr[:start_time] %></td>
         <td><%= cr[:end_time] %></td>
         <td><%= cr[:ping_freq] %></td>
