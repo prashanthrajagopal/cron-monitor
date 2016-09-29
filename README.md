@@ -1,4 +1,4 @@
-# Cron Monitor
+# Cron Monitor - First Phase
 
 A basic Sinatra app to monitor crons. Alerts you if a cron has started and not ended or if a cron has not started within the specified time.
 
@@ -7,6 +7,10 @@ All you need to do is curl a url before and after a cron runs
 Before cron - http://localhost:5000/ping?name=cron_name&et=approx_time_taken_to_run&pf=time_between_2_runs&status=start
 
 After cron - http://localhost:5000/ping?name=cron_name&status=compelte
+
+## TODO
+
+Integrations - Slack, HipChat
 
 ## Configuration
 

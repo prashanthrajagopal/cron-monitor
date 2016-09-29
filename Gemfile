@@ -13,15 +13,12 @@ gem 'dm-migrations'
 gem 'time_difference'
 gem 'pony'
 
-group :development do
-  gem 'foreman'
-  gem "awesome_print", require:"ap"
-  gem 'bullet'
-  gem 'hirb'
-  gem 'dm-sqlite-adapter'
+group :production do
+  gem 'unicorn'
 end
 
-group :test do
+group :test, :development do
+  gem 'foreman'
   gem 'rspec', :require => 'spec'
   gem 'rack-test'
   gem 'dm-sqlite-adapter'
