@@ -6,6 +6,7 @@ class CronRun
   property :start_time, DateTime, :required => false
   property :end_time,   DateTime, :required => false
   property :alert,      Integer, :required => false
+  property :run_time,   Float
   property :created_at, DateTime
   property :updated_at, DateTime
 

@@ -20,12 +20,12 @@ def _log msg
   f.close
 end
 
-def populate_cron_runs(action,cron_name)
-  if action == 'start'
-    CronRun.create(:cron_id => Cron.first(:name => cron_name).id,:start_time => DateTime.now, :alert => 0)
-  elsif action == 'complete'
-    cr = CronRun.last(:cron_id => Cron.first(:name => cron_name).id)
-    cr.update(:end_time => DateTime.now)
+def populate_cron_runs params
+  if params[:status] == 'start'
+    CronRun.create(:cron_id => Cron.first(:name => params[:name]).id,:start_time => DateTime.now, :alert => 0)
+  elsif params[:status] == 'complete'
+    cr = CronRun.last(:cron_id => Cron.first(:name => params[:name]).id)
+    cr.update(:end_time => DateTime.now, :run_time => params[:et])
   end
 end
 
@@ -54,7 +54,11 @@ Thread.new do
             end
           end
         end
-        alert(cron.id, 2, CronRun.last(:cron_id => cron.id).start_time, cron.ping_freq) if TimeDifference.between(CronRun.last(:cron_id => cron.id).start_time, DateTime.now).in_minutes.to_i > cron.ping_freq
+        pf_diff = TimeDifference.between(CronRun.last(:cron_id => cron.id).start_time, DateTime.now).in_minutes.to_i
+        if ( pf_diff  > cron.ping_freq )
+          _log "MODULO ------- #{pf_diff % cron.ping_freq}"
+          alert(cron.id, 2, CronRun.last(:cron_id => cron.id).start_time, cron.ping_freq) #if ( pf_diff  > cron.ping_freq && pf_diff % cron.ping_freq )
+        end
       rescue Exception => e
         _log e.message
         _log e.backtrace
@@ -96,19 +100,15 @@ get "/cron" do
   end
   @cron_hash = { @cron.name => [] }
   cron_run.each do |cr|
-    @cron_hash[@cron.name] << {:start_time => cr.start_time, :end_time => cr.end_time, :ping_freq => @cron.ping_freq, :exec_freq => @cron.exec_time}
+    @cron_hash[@cron.name] << {:start_time => cr.start_time, :end_time => cr.end_time, :ping_freq => @cron.ping_freq, :exec_freq => @cron.exec_time, :run_time => cr.run_time}
   end
   erb :cron
 end
 
 post "/ping" do
   begin
-    if Cron.first(:name => params[:name])
-      populate_cron_runs params[:status], params[:name]
-    else
-      Cron.create(:name => params[:name], :exec_time => params[:et], :ping_freq => params[:pf])
-      populate_cron_runs params[:status], params[:name]
-    end
+    Cron.create(:name => params[:name], :exec_time => params[:et], :ping_freq => params[:pf]) if !Cron.first(:name => params[:name])
+    populate_cron_runs params
   rescue Exception => e
     puts e.message
     puts e.backtrace
