@@ -29,13 +29,7 @@ def populate_cron_runs params
   end
 end
 
-def alert cron_id, error_type, time, freq
-  msg = ""
-  if error_type == 1
-    msg = "Cron #{Cron.first(:id => cron_id).name} started at #{time.strftime("%d-%m-%Y - %H:%M:%S")} but did not complete in #{freq} minutes"
-  elsif error_type == 2
-    msg = "Cron #{Cron.first(:id => cron_id).name} did not start. It was supposed to run every #{freq} minutes. Last started at #{time.strftime("%d-%m-%Y - %H:%M:%S")}"
-  end
+def alert msg
   _log "sending mail with content ---------- #{msg}"
   _log Pony.mail(:to => ENV["EMAIL_TO"], :from => ENV["EMAIL_FROM"], :subject => 'CRON ALERT', :body => msg)
 end
@@ -43,6 +37,8 @@ end
 Thread.new do
   while true do
     _log "#{Time.now} --- running thread"
+    alert1 = []
+    alert2 = []
     Cron.each do |cron|
       begin
         CronRun.all(:cron_id => cron.id).each do |cr|
@@ -50,14 +46,14 @@ Thread.new do
             cron_exec_time = Cron.first(:id => cr.cron_id).exec_time
             if TimeDifference.between(cr.start_time, DateTime.now).in_minutes.to_i > cron_exec_time
               cr.update(:alert => 1)
-              alert(cr.cron_id, 1, cr.start_time, cron_exec_time)
+              alert1 << "#{Cron.first(:id => cr.cron_id).name} started at #{cr.start_time}. Should have completed in #{cron_exec_time} but did not"
             end
           end
         end
         pf_diff = TimeDifference.between(CronRun.last(:cron_id => cron.id).start_time, DateTime.now).in_minutes.to_i
         if ( pf_diff  > cron.ping_freq )
           _log "MODULO ------- #{pf_diff % cron.ping_freq}"
-          alert(cron.id, 2, CronRun.last(:cron_id => cron.id).start_time, cron.ping_freq) #if ( pf_diff  > cron.ping_freq && pf_diff % cron.ping_freq )
+          alert2 << "#{Cron.first(:id => cron.id).name} last started at #{CronRun.last(:cron_id => cron.id).start_time}. Should run every #{cron.ping_freq} minutes."
         end
       rescue Exception => e
         _log e.message
@@ -66,7 +62,10 @@ Thread.new do
         next
       end
     end
-    sleep 60
+    alert alert1
+    alert alert2
+    #if ( pf_diff  > cron.ping_freq && pf_diff % cron.ping_freq )
+    sleep 900
   end
 end
 
